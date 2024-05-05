@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 import pyautogui as pg
 from tkinter import Tk, Frame, LabelFrame, Button
 from tkinter.ttk import Frame as frame
+import yaml
 
 
 class FrameController(frame):
@@ -70,6 +71,10 @@ def main():
 
 
 if __name__ == "__main__":
+    # Get configurations
+    with open("configs.yaml") as f:
+        configs = yaml.load(f, Loader=yaml.FullLoader)
+    
     # Execution
-    fc = FrameController({})
+    fc = FrameController(configs.get("ui", {}))
     fc.mainloop()
