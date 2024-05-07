@@ -1,2 +1,4 @@
 keyboard==0.13.5
 pyautogui==0.9.54
+pyinstaller==6.6.0
+PyYaml==6.0
