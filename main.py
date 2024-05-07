@@ -1,3 +1,4 @@
+import threading
 import keyboard
 from PIL import Image, ImageTk
 import pyautogui as pg
@@ -7,8 +8,9 @@ import yaml
 
 
 class FrameController(frame):
-    def __init__(self, ui_configs):
+    def __init__(self, ui_configs, controller=None):
         self.ui_configs = ui_configs
+        self.controller = controller
         self._set_widget()
         self._init_interface()
     
@@ -27,7 +29,7 @@ class FrameController(frame):
         start_image = Image.open("./start.png")
         start_image = start_image.resize((100, 100))
         start_image = ImageTk.PhotoImage(start_image)
-        button_start = Button(frame_start, image=start_image)
+        button_start = Button(frame_start, image=start_image, command=self.controller.start)
         button_start.image = start_image
         button_start.pack()
 
@@ -36,7 +38,7 @@ class FrameController(frame):
         end_image = Image.open("./end.png")
         end_image = end_image.resize((100, 100))
         end_image = ImageTk.PhotoImage(end_image)
-        button_end = Button(frame_end, image=end_image)
+        button_end = Button(frame_end, image=end_image, command=self.controller.end)
         button_end.image = end_image
         button_end.pack()
 
@@ -54,20 +56,28 @@ class FrameController(frame):
         self.master.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
 
-def main():
-    print("ESC키 입력 시 프로그램이 종료됩니다.")
-    print("q키 입력 시 ctrl + alt + shift + s 매크로가 실행됩니다.")
-    i = 0
-    while True:
-        if keyboard.is_pressed("esc"):
-            print("프로그램을 종료합니다.")
-            break
-        elif keyboard.is_pressed("q"):
-            i += 1
-            print(f"{i}번 매크로를 실행했습니다.")
-            pg.hotkey("ctrl", "alt", "shift", "s")
-        else:
-            pass
+class WidgetController:
+    def __init__(self):
+        self.is_end = False
+    
+    def start(self):
+        t = threading.Thread(target=self._start)
+        t.start()
+    
+    def _start(self):
+        print("ESC키 입력 시 프로그램이 종료됩니다.")
+        print("q키 입력 시 ctrl + alt + shift + s 매크로가 실행됩니다.")
+        i = 0
+        while not self.is_end:
+            if keyboard.is_pressed("q"):
+                i += 1
+                print(f"{i}번 매크로를 실행했습니다.")
+                pg.hotkey("ctrl", "alt", "shift", "s")
+        self.is_end = False
+    
+    def end(self):
+        print("End 함수 발동")
+        self.is_end = True
 
 
 if __name__ == "__main__":
@@ -76,5 +86,6 @@ if __name__ == "__main__":
         configs = yaml.load(f, Loader=yaml.FullLoader)
     
     # Execution
-    fc = FrameController(configs.get("ui", {}))
+    wc = WidgetController()
+    fc = FrameController(configs.get("ui", {}), wc)
     fc.mainloop()
